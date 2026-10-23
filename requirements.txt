@@ -1,0 +1,6 @@
+# Python packages. Install into the project's virtual environment with
+#   .venv/bin/pip install -r requirements.txt
+# (install.sh does this for you). libmtp is a system library: brew install libmtp
+
+# PDF Cutter and screenshot thumbnails
+PyMuPDF==1.28.2

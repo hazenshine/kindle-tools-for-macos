@@ -1,0 +1,39 @@
+#!/bin/zsh
+# Opens Kindle Tools: starts the server in the background if it isn't running,
+# then opens the browser. The server exits ~5 min after the page is closed.
+DIR="${0:A:h}"
+URL="http://127.0.0.1:8765/"
+PY="$DIR/.venv/bin/python"
+
+# Another copy of Kindle Tools (a second clone, for example) may already be
+# serving this port. Stop it and start this one instead. Its Kindle process is
+# killed outright first: closing the connection normally would make the
+# Kindle leave USB mode until the cable is plugged in again.
+if info="$(curl -fs "${URL}api/ping")"; then
+  other="$("$PY" - "$info" "$DIR" <<'PY'
+import json, sys
+d = json.loads(sys.argv[1])
+if d.get("root") != sys.argv[2]:
+    print(d.get("pid") or "", d.get("worker") or "")
+PY
+)"
+  if [[ -n "$other" ]]; then
+    read -r pid worker <<< "$other"
+    [[ -n "$worker" ]] && kill -9 "$worker" 2>/dev/null
+    [[ -n "$pid" ]] && kill "$pid" 2>/dev/null
+    for i in {1..50}; do
+      curl -fs -o /dev/null "${URL}api/ping" || break
+      sleep 0.1
+    done
+  fi
+fi
+
+if ! curl -fs -o /dev/null "${URL}api/ping"; then
+  mkdir -p "$DIR/.cache"
+  nohup "$PY" "$DIR/app/server.py" >"$DIR/.cache/server.log" 2>&1 &!
+  for i in {1..50}; do
+    curl -fs -o /dev/null "${URL}api/ping" && break
+    sleep 0.1
+  done
+fi
+open "$URL"

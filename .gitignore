@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Created while the app runs
+.cache/
+
+# Personal files kept in the project folder (notebook exports, books…)
+*.pdf
+*.epub
+*.mobi
+*.azw3
+
+# macOS
+.DS_Store
